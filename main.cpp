@@ -1,20 +1,45 @@
 #include <iostream>
-#include "executor/ThreadPool.h"
-#include "Executors.h"
+#include <thread>
+#include <numeric>
+#include <future>
 
-int ros(int f) {
-    return 5+f;
-}
+#define BUFFER_SIZE 10000
+#define NUM_THREADS 10
 
 int main() {
-    ThreadPool& pool = Executors::newAutoThreadPool();
+    int buffer[BUFFER_SIZE];
+    for (long i = 0; i < BUFFER_SIZE; ++i) {
+        buffer[i] = 1;
+    }
 
-    std::future<int> res1 = pool.submit([] { return ros(3); });
+    std::future<int> futures[NUM_THREADS];
+    int blockSize = BUFFER_SIZE/NUM_THREADS;
 
-    std::future<int> res2 = pool.submit([] {
-        return 2;
-    });
+    auto start = std::chrono::high_resolution_clock::now();
 
-    int r = res1.get() + res2.get();
-    std::cout << r << std::endl;
+    std::thread threads[NUM_THREADS];
+    for (int j = 0; j < NUM_THREADS; ++j) {
+        std::packaged_task<int()> task([&buffer, j, blockSize] {
+            int start = j*blockSize;
+            int end = start + blockSize;
+            return std::accumulate(buffer + start, buffer + end, 0);
+        });
+
+        futures[j] = task.get_future();
+        threads[j] = std::thread(std::move(task));
+    }
+
+    int result = 0;
+    for(auto &future : futures) {
+        result += future.get();
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end- start).count();
+    std::cout<< duration << std::endl;
+
+    for(auto &thread: threads) {
+        thread.join();
+    }
+//    ThreadPool& pool = Executors::newAutoThreadPool();
 }
