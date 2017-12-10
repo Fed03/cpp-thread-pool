@@ -1,12 +1,13 @@
 #include <iostream>
 #include "executor/ThreadPool.h"
+#include "Executors.h"
 
 int ros(int f) {
     return 5+f;
 }
 
 int main() {
-    ThreadPool pool;
+    ThreadPool& pool = Executors::newAutoThreadPool();
 
     std::future<int> res1 = pool.submit([] { return ros(3); });
 
