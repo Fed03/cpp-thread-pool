@@ -23,6 +23,9 @@ class ThreadPool {
         }
     };
 
+    template <typename FunctionType>
+    using funcResultType = typename std::result_of_t<FunctionType()>;
+
 public:
     explicit ThreadPool() : done(false) {
         const unsigned availableThreads = std::thread::hardware_concurrency();
@@ -36,7 +39,8 @@ public:
             throw;
         }
     };
-    virtual ~ThreadPool() {
+
+    ~ThreadPool() {
         done=true;
         workQueue.invalidate();
         for (auto &thread : threads) {
@@ -47,8 +51,8 @@ public:
     };
 
     template <typename FunctionType>
-    std::future<typename std::result_of_t<FunctionType()>> submit(FunctionType function) {
-        typedef typename std::result_of_t<FunctionType()> resultType;
+    std::future<funcResultType<FunctionType>> submit(FunctionType function) {
+        typedef funcResultType<FunctionType> resultType;
 
         std::packaged_task<resultType()> task(std::move(function));
         std::future<resultType> future = task.get_future();
