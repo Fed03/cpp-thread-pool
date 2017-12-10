@@ -4,7 +4,7 @@
 #include <mutex>
 
 template<typename T>
-class TaskQueue {
+class ConcurrentQueue {
 private:
     struct node {
         std::unique_ptr<node> next;
@@ -25,9 +25,9 @@ private:
     }
 
 public:
-    TaskQueue() : head(new node), tail(head.get()), isValid(true) {}
-    TaskQueue(const TaskQueue& other) = delete;
-    TaskQueue& operator=(const TaskQueue& other)= delete;
+    ConcurrentQueue() : head(new node), tail(head.get()), isValid(true) {}
+    ConcurrentQueue(const ConcurrentQueue& other) = delete;
+    ConcurrentQueue& operator=(const ConcurrentQueue& other)= delete;
 
     bool empty() {
         std::lock_guard<std::mutex> headLock(headMtx);

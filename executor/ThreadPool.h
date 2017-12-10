@@ -3,12 +3,12 @@
 
 #include <vector>
 #include <future>
-#include "../Task.h"
-#include "../taskQueue/TaskQueue.h"
+#include "../FunctionWrapper.h"
+#include "../ConcurrentQueue.h"
 
 class ThreadPool {
     std::atomic_bool done;
-    TaskQueue<FuncWrapper> workQueue;
+    ConcurrentQueue<FuncWrapper> workQueue;
     std::vector<std::thread> threads;
 
     void threadFunc() {
