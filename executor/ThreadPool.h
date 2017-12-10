@@ -31,6 +31,11 @@ class ThreadPool {
         }
     }
 
+    void cleanupPool() {
+        done=true;
+        workQueue.invalidate();
+    }
+
     template <typename FunctionType>
     using funcResultType = typename std::result_of_t<FunctionType()>;
 
@@ -49,8 +54,7 @@ public:
     };
 
     ~ThreadPool() {
-        done=true;
-        workQueue.invalidate();
+        cleanupPool();
         for (auto &thread : threads) {
             if(thread.joinable()) {
                 thread.join();
@@ -69,13 +73,12 @@ public:
 
         workQueue.push(move(task));
         return future;
-
     };
 
     template <typename FunctionType>
     std::vector<std::future<funcResultType<FunctionType>>> invokeAll(const std::vector<FunctionType>& funcList) {
         checkShutdownFlag();
-        
+
         typedef std::future<funcResultType<FunctionType>> resultType;
 
         std::vector<resultType> results;
@@ -88,6 +91,7 @@ public:
 
     void shutdown() {
         shutdownFlag = true;
+        cleanupPool();
     }
 
     bool isShutdown() {
