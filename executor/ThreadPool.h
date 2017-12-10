@@ -3,11 +3,13 @@
 
 #include <vector>
 #include <future>
+#include <exception>
 #include "../FunctionWrapper.h"
 #include "../ConcurrentQueue.h"
 
 class ThreadPool {
     std::atomic_bool done;
+    std::atomic_bool shutdownFlag;
     ConcurrentQueue<FuncWrapper> workQueue;
     std::vector<std::thread> threads;
 
@@ -23,11 +25,17 @@ class ThreadPool {
         }
     };
 
+    void checkShutdownFlag() {
+        if (shutdownFlag) {
+            throw std::invalid_argument("Cannot submit more tasks. The pool has been shutted down.");
+        }
+    }
+
     template <typename FunctionType>
     using funcResultType = typename std::result_of_t<FunctionType()>;
 
 public:
-    explicit ThreadPool() : done(false) {
+    explicit ThreadPool() : done(false), shutdownFlag(false) {
         const unsigned availableThreads = std::thread::hardware_concurrency();
         const unsigned threadsCount = std::max<unsigned>((availableThreads - 1), 1);
         try {
@@ -52,6 +60,8 @@ public:
 
     template <typename FunctionType>
     std::future<funcResultType<FunctionType>> submit(FunctionType function) {
+        checkShutdownFlag();
+
         typedef funcResultType<FunctionType> resultType;
 
         std::packaged_task<resultType()> task(std::move(function));
@@ -59,10 +69,13 @@ public:
 
         workQueue.push(move(task));
         return future;
+
     };
 
     template <typename FunctionType>
     std::vector<std::future<funcResultType<FunctionType>>> invokeAll(const std::vector<FunctionType>& funcList) {
+        checkShutdownFlag();
+        
         typedef std::future<funcResultType<FunctionType>> resultType;
 
         std::vector<resultType> results;
@@ -71,6 +84,14 @@ public:
         }
 
         return results;
+    }
+
+    void shutdown() {
+        shutdownFlag = true;
+    }
+
+    bool isShutdown() {
+        return shutdownFlag;
     }
 };
 
