@@ -60,6 +60,18 @@ public:
         workQueue.push(move(task));
         return future;
     };
+
+    template <typename FunctionType>
+    std::vector<std::future<funcResultType<FunctionType>>> invokeAll(const std::vector<FunctionType>& funcList) {
+        typedef std::future<funcResultType<FunctionType>> resultType;
+
+        std::vector<resultType> results;
+        for (const auto &func : funcList) {
+            results.push_back(submit(func));
+        }
+
+        return results;
+    }
 };
 
 
