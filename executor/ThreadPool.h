@@ -24,7 +24,7 @@ class ThreadPool {
     };
 
 public:
-    ThreadPool() : done(false) {
+    explicit ThreadPool() : done(false) {
         const unsigned availableThreads = std::thread::hardware_concurrency();
         const unsigned threadsCount = std::max<unsigned>((availableThreads - 1), 1);
         try {
