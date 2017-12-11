@@ -1,6 +1,9 @@
 #ifndef THREAD_POOL_TASK_H
 #define THREAD_POOL_TASK_H
 
+#include <utility>
+#include <memory>
+
 class FuncWrapper {
     struct baseImplementation {
         virtual void exec() = 0;
