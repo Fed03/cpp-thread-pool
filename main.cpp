@@ -2,6 +2,8 @@
 #include <thread>
 #include <numeric>
 #include <future>
+#include <functional>
+#include <algorithm>
 #include "Executors.h"
 
 #define BUFFER_SIZE 1000000
@@ -69,7 +71,7 @@ int main() {
     }
 
     std::sort(std::begin(durations), std::end(durations));
-    auto avg = std::accumulate(std::begin(durations), std::end(durations), 0l) / REPETITIONS;
+    auto avg = std::accumulate(std::begin(durations), std::end(durations), 0ll) / REPETITIONS;
     auto median = (durations[REPETITIONS/2] + durations[(REPETITIONS/2) - 1]) /2;
 
     std::cout << "avg: " << avg << std::endl;
