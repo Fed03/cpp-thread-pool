@@ -5,8 +5,8 @@
 #include "Executors.h"
 
 #define BUFFER_SIZE 1000000
-#define CHUNK_NUMBER 100
-#define REPETITIONS 100
+#define CHUNK_NUMBER 10000
+#define REPETITIONS 50
 
 int accumulateBlock(int *buffer, int blockSize, int blockOffset) {
     int start = blockOffset * blockSize;
@@ -58,17 +58,20 @@ int main() {
 
     int blockSize = BUFFER_SIZE/CHUNK_NUMBER;
 
-    auto duration = std::chrono::microseconds(0);
+    long long int durations[REPETITIONS];
     for (long j = 0; j < REPETITIONS; ++j) {
         auto start = std::chrono::high_resolution_clock::now();
 //        poolSolution(std::ref(buffer), blockSize);
         spawnSolution(std::ref(buffer), blockSize);
         auto end = std::chrono::high_resolution_clock::now();
 
-        duration += std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        durations[j] = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
     }
 
-    auto avg = duration.count() / REPETITIONS;
+    std::sort(std::begin(durations), std::end(durations));
+    auto avg = std::accumulate(std::begin(durations), std::end(durations), 0l) / REPETITIONS;
+    auto median = (durations[REPETITIONS/2] + durations[(REPETITIONS/2) - 1]) /2;
 
-    std::cout << avg << std::endl;
+    std::cout << "avg: " << avg << std::endl;
+    std::cout << "median: " << median << std::endl;
 }
